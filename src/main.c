@@ -18,7 +18,7 @@ int hasConection ( node* person, int conection){
 }
 
 
-void visitor (vertex* ver, vertex* people){
+void visitor (vertex* ver, vertex* people, int* max){
   node *nodeIterator;
   /* printf("estou no visitor crl %d ->\n", ver->id); */
   if(ver != NULL){
@@ -30,10 +30,12 @@ void visitor (vertex* ver, vertex* people){
 	people[(nodeIterator->valor)-1].color = 1;
 	people[(nodeIterator->valor)-1].distance = (ver->distance) + 1;
       }
-      /*  if(people[(nodeIterator->valor)-1].distance > (ver->distance) + 1){
-	printf("aqui\n");
+      if(people[(nodeIterator->valor)-1].distance > (ver->distance) + 1){
 	people[(nodeIterator->valor)-1].distance = (ver->distance) + 1;
-	}*/
+      }
+      if(people[(nodeIterator->valor)-1].distance > *(max)){
+	*(max) = people[(nodeIterator->valor)-1].distance;
+      }
       nodeIterator = nodeIterator->next;
     }
     ver->color = 2;
@@ -44,7 +46,7 @@ void visitor (vertex* ver, vertex* people){
       
       /* printf("estou 2º while %d -> valor %d -> cor\n",nodeIterator->valor, people[(nodeIterator->valor -1)].color ); */
       if(people[(nodeIterator->valor -1)].color == 1){
-	visitor( &(people[(nodeIterator->valor -1)]), people);
+	visitor( &(people[(nodeIterator->valor -1)]), people, max);
       }
       nodeIterator= nodeIterator->next;
     }
@@ -118,24 +120,23 @@ int main(){
       }
     }
 
-    visitor(&people[erdos.id -1], people);
+    visitor(&people[erdos.id -1], people, &max);
 
     /* for( i = 0; i<=nbVertex-1; i++){
       printf("%d : %d : %d : %d\n", people[i].id, people[i].conections->valor, people[i].distance, people[i].color);
     }*/
-    
-    for( i = 0; i<=nbVertex-1; i++){
-      if(people[i].distance > max){
-	max = people[i].distance;
-      }
-    }
-
     
     result = (int*) malloc(sizeof(int)*(max+1));
     result[0] = max;
     for( i = 0; i<=nbVertex-1; i++){
       if(people[i].distance != 0){
 	result[people[i].distance] += 1;
+      }
+      conection1 = people[i].conections;
+      while( conection1 != NULL){
+	conection2 = conection1;
+	conection1 = conection1-> next;
+	free(conection2);
       }
     }
 
@@ -144,6 +145,7 @@ int main(){
     }
        
     free(people);
+    free(result);
   }  
   return 0;
 }
