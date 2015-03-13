@@ -14,10 +14,14 @@ typedef struct vertex_struct{
   int distance;
 }vertex;
 
-
 void initVertex( vertex* i){
   i->id = i->color = i->distance = 0;
   i->conections = i->endConections = NULL;
+}
+
+void initNode ( node* n, int value){
+  n-> valor = value;
+  n-> next = NULL;
 }
 
 int hasConection ( node* person, int conection){
@@ -39,136 +43,104 @@ int qempty(int* head, int *tail){
 
 void enqueue(int *q, int x, int* tail, int N){
   q[*(tail)] = x;
-  if (*(tail) == N )      
+  if (*(tail) == N)      
     *(tail) = 0;
   else
-    ( *(tail)) ++;
+    (*(tail))++;
 }
 
-
-/* void visitor (vertex* people, node* queue, node* endQueue){ */
-void visitor (vertex* people, int* queue, int* tail, int* head, int N){
+void visitor (vertex* people, int* queue, int* tail, int* head, int N, int* max){
   node *nodeIterator, *toAdd;
   nodeIterator = toAdd = NULL;
-  
+
   if(!(qempty(head, tail))){
       nodeIterator = people[queue[*(head)]-1].conections;
-    while(nodeIterator != NULL){
 
+    while(nodeIterator != NULL){
       if(people[(nodeIterator->valor)-1].color == 0){
 	people[(nodeIterator->valor)-1].color = 1;
-	people[(nodeIterator->valor)-1].distance = people[queue[*(head)] - 1].distance + 1;
-	
-	enqueue(queue, nodeIterator->valor,  tail, N);
-       
+	people[(nodeIterator->valor)-1].distance = people[queue[*(head)]-1].distance + 1;
+	enqueue(queue, nodeIterator->valor, tail, N);
       }
+
+      if(people[(nodeIterator->valor)-1].distance > *(max))
+	*(max) = people[(nodeIterator->valor)-1].distance;
+
       nodeIterator = nodeIterator->next;
     }
-    people[queue[*(head)] - 1].color = 2;
-    
+    people[queue[*(head)]-1].color = 2;
+  }
+}
+
+void addConnection( vertex* people, int person, node* toAdd, int erdos){
+  if(people[person-1].id == 0)
+    people[person-1].id = person;
+
+  if(people[person-1].conections != NULL){
+    if(toAdd->valor != erdos && person != toAdd->valor){ 
+      if((hasConection(people[person-1].conections, toAdd->valor)) == 0){
+	(people[person -1].endConections)->next = toAdd;
+	people[person-1].endConections = toAdd;
+      }
+    }
+    else
+      free(toAdd);
+  }
+
+  if(people[person - 1].conections == NULL){
+    if(toAdd->valor != erdos && person != toAdd->valor){ 
+      people[person-1].conections = toAdd;
+      people[person-1].endConections = toAdd;
+    }
+    else
+      free(toAdd);
   }
 }
 
 int main(){
 
-  int i;
-
-  int head = 0;
-  int tail = 0;
-  int* v;
-
-  int nbVertex, nbEdges, first, second;
-  vertex erdos;
+  int nbVertex, nbEdges, first, second, i, head, tail, max, erdos;
+  int *result, *v;
   vertex *people;
-  int *result, max;
   node *fir, *sec, *queue, *endQueue;
-  nbVertex = nbEdges = max = i = 0;
+  nbVertex = nbEdges = max = i = head = tail = 0;
   first = second = 0;
   fir = sec = queue = endQueue = NULL;
   people = NULL;
 
-  initVertex( &erdos);
-  
-  if( scanf("%d %d %d", &nbVertex, &nbEdges, &erdos.id) == 3){
+  if( scanf("%d %d %d", &nbVertex, &nbEdges, &erdos) == 3){
 
-    people = (vertex*) malloc(sizeof(vertex)*nbVertex);
-    
-    v = (int*) malloc(sizeof(int)* nbVertex);
+    people = (vertex*) malloc(sizeof(vertex)*nbVertex);    
+    v = (int*) calloc(nbVertex, sizeof(int));
 
     for(i = 0; i<nbVertex; i++){
       initVertex(&(people[i]));
-      v[i] = 0;
     }
 
-    people[(erdos.id) -1] = erdos;
-    
+    people[erdos -1].id = erdos;
     while( scanf("%d %d ", &first, &second) != EOF ){
       fir = (node*) malloc(sizeof(node));
       sec = (node*) malloc(sizeof(node));
 
-      fir->next = NULL;
-      sec->next= NULL;
-
-      sec->valor = second;
-      fir->valor = first;
-
-      if(people[first-1].id == 0){
-	people[first-1].id = first;
-      }
-      if(people[second-1].id == 0){
-	people[second-1].id = second;
-      }
+      initNode(fir, first);
+      initNode(sec, second);
       
-      if(people[first-1].conections != NULL){
-	if(sec->valor != erdos.id && sec->valor != people[first-1].id){ 
-	  if((hasConection(people[first-1].conections, second)) == 0){
-	    (people[first-1].endConections)->next = sec;
-	    people[first-1].endConections = sec;
-	  }
-	}
-      }
-      if(people[second-1].conections != NULL){
-	if(fir->valor != erdos.id && fir->valor != people[second-1].id){
-	  if((hasConection(people[second-1].conections, first)) == 0){
-	    (people[second-1].endConections)->next = fir;
-	    people[second-1].endConections = fir;
-	  }
-	}
-      }
-     
-      if(people[first-1].conections == NULL){
-	if(sec->valor != erdos.id && sec->valor != people[first-1].id ){ 
-	  people[first-1].conections = sec;
-	  people[first-1].endConections = sec;
-	} 
-      }
-      if(people[second-1].conections == NULL){
-	if(fir->valor != erdos.id && fir->valor != people[second-1].id){
-	  people[second-1].conections = fir;
-	  people[second-1].endConections = fir; 
-	}
-      }
+      addConnection(people, first, sec, erdos);
+      addConnection(people, second, fir, erdos);
     }
     
-    enqueue(v, erdos.id, &tail, nbVertex);
-    while( head != tail){
-      visitor(people, v, &tail, &head, nbVertex);
-      
-      if (head < nbVertex){
+    enqueue(v, erdos, &tail, nbVertex);
+    while( !qempty(&head, &tail) ){
+      visitor(people, v, &tail, &head, nbVertex, &max);
+      if (head < nbVertex)
 	head++;
-      }
-      else{
+      else
 	head = 0;
-      }
     }
 
-    for( i = 0; i<nbVertex; i++){
-      if(people[i].distance > max){
-        max = people[i].distance;
-      }
-    }
-    result = (int*) malloc(sizeof(int)*(max+1));
+    result = (int*) calloc((max+1), sizeof(int));
     result[0] = max;
+
     for( i = 0; i<nbVertex; i++){
       if(people[i].distance != 0){
 	result[people[i].distance] += 1;
@@ -180,11 +152,12 @@ int main(){
 	free(fir);
       }
     }
-    for( i = 0; i<=max; i++){
+
+    for( i = 0; i<=max; i++)
       printf("%d\n", result[i]);
-    }
-     
+
     free(people);
+    free(v);
     free(result);
   }  
   return 0;
