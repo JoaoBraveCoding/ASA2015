@@ -85,10 +85,10 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
     *(tailOfA) = tailOfB;
     tailOfB = headOfB = 0;
     if(changeFlag == 0){
-      free (queueB);
       break;
     }
   }
+  free(queueB);
   identifyNegCycle(vertexs, queueA, headOfA, tailOfA, nbVertex);
    
 }
@@ -155,8 +155,10 @@ int main(){
       free(auxPointer);
       auxPointer = auxPointer2;
     }
-    free(vertexs[i]);
   }
+  free(queueA);
+  free(vertexs);
+  
 
   }
   return 0;
