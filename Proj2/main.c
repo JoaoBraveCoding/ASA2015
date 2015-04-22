@@ -40,15 +40,16 @@ void nextQueue(int* head, int N){
 void identifyNegCycle(vertex* vertexs, int *queueA, int* headOfA, int* tailOfA, int nbVertex){
   node* auxPointer;
   while(!qempty(headOfA, tailOfA)){
-    vertexs[queueA[*(headOfA)]-1].controlFlag = 1;
-    auxPointer = vertexs[queueA[*(headOfA)]-1].conections;
+    vertexs[queueA[*(headOfA)] - 1].controlFlag = 1;
+    auxPointer = vertexs[queueA[*(headOfA)] - 1].conections;
     while(auxPointer != NULL){
-      if (vertexs[(auxPointer->vertexNb)-1].controlFlag == 0)
-	enqueue(queueA, vertexs[(auxPointer->vertexNb)-1].id, tailOfA, nbVertex);
+      if (vertexs[(auxPointer->vertexNb) - 1].controlFlag == 0)
+	enqueue(queueA, vertexs[(auxPointer->vertexNb) - 1].id, tailOfA, nbVertex);
       auxPointer= auxPointer->next;
     }
     nextQueue(headOfA, nbVertex);
   }
+  free(queueA);
 }
 
 void relax(vertex* u, vertex* v ,int  w, int* changeFlag, int* queueB, int* tailOfB, int nbVertex){
@@ -67,12 +68,13 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
   node* auxPointer;
   changeFlag = headOfB = tailOfB = 0;
   queueB = (int*) calloc(nbVertex, sizeof(int));
-  for (i = 0; i<nbVertex; i++){
+  for (i = 0; i < nbVertex; i++){
     while (!qempty(headOfA, tailOfA)){
-      auxPointer = vertexs[queueA[*(headOfA)]-1].conections;
-      if(vertexs[queueA[*(headOfA)]-1].vertexWeight < INT_MAX/2){
+      if(vertexs[queueA[*(headOfA)] - 1].vertexWeight < INT_MAX/2){
+	auxPointer = vertexs[queueA[*(headOfA)] - 1].conections;
 	while(auxPointer != NULL){
-	  relax(&(vertexs[queueA[*(headOfA)]-1]), &(vertexs[(auxPointer->vertexNb)-1]), auxPointer->cost, &(changeFlag), queueB, &(tailOfB), nbVertex); 
+	  relax(&(vertexs[queueA[*(headOfA)] - 1]), &(vertexs[(auxPointer->vertexNb) - 1]),
+		auxPointer->cost, &(changeFlag), queueB, &(tailOfB), nbVertex); 
 	  auxPointer = auxPointer->next;
 	}
       }
@@ -84,7 +86,7 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
     *(headOfA)= 0;
     *(tailOfA) = tailOfB;
     tailOfB = headOfB = 0;
-    if(changeFlag == 0){
+    if(changeFlag == 0){        /*condicao de paragem caso ja todos os vertices tenham o seu pesso correcto*/
       break;
     }
   }
@@ -97,9 +99,11 @@ int main(){
 
   int nbVertex, nbEdges, source, beggining, end, cost, i, headOfA, tailOfA, *queueA;
   vertex *vertexs;
-  node *connectionToAdd;
+  node *connectionToAdd, *auxPointer, *auxPointer2;
   nbVertex = nbEdges = source = beggining = end = cost = i = tailOfA = headOfA = 0;
   vertexs = NULL;
+  queueA = NULL;
+  connectionToAdd = NULL;
 
 
   if(scanf("%d %d %d", &nbVertex, &nbEdges, &source) == 3){
@@ -107,35 +111,34 @@ int main(){
     vertexs = (vertex*) malloc(sizeof(vertex)*nbVertex);
     queueA = (int*) calloc(nbVertex, sizeof(int));
 
-
-    for(i = 0; i<nbVertex; i++){
-      initVertex(&(vertexs[i]));
-      vertexs[i].id = i+1;
-      enqueue( queueA, i+1, &tailOfA, nbVertex);
+    /*Inicializar o vector de vertices e colocamos cada vertice numa queue*/
+    for(i = 0; i < nbVertex; i++){
+      initVertex( &(vertexs[i]) );
+      vertexs[i].id = i + 1;
+      enqueue( queueA, i + 1, &tailOfA, nbVertex);
     }
-    vertexs[source-1].vertexWeight = 0;
-    vertexs[source-1].controlFlag = 0;
 
+    vertexs[source - 1].vertexWeight = 0;
+    vertexs[source - 1].controlFlag = 0;
+    
+    /*ciclo para leitura do input*/
     while ( scanf( "%d %d %d ", &beggining, &end, &cost) != EOF){
       connectionToAdd = (node*) malloc (sizeof(node));
       fillNode(connectionToAdd, end, cost);
 
-      if(beggining == end){
-	return 0;
+      if(vertexs[beggining - 1].conections != NULL){
+	connectionToAdd->next = vertexs[beggining - 1].conections;
+	vertexs[beggining - 1].conections = connectionToAdd;
       }
 
-      if(vertexs[beggining-1].conections != NULL){
-	connectionToAdd->next = vertexs[beggining-1].conections;
-	vertexs[beggining-1].conections = connectionToAdd;
-      }
-
-      if(vertexs[beggining-1].conections == NULL){
-	vertexs[beggining-1].conections = connectionToAdd;
+      if(vertexs[beggining - 1].conections == NULL){
+	vertexs[beggining - 1].conections = connectionToAdd;
       }
     }
     bellmanFord ( vertexs, nbVertex, queueA, &headOfA, &tailOfA);
    
-    for(i = 0; i<nbVertex; i++){
+    /*ciclo para imprimir o output e para fazer free as estruturas alocadas*/
+    for(i = 0; i < nbVertex; i++){
       if(vertexs[i].controlFlag == 0){
 	printf("%d\n",vertexs[i].vertexWeight);
       }
@@ -145,21 +148,15 @@ int main(){
       if(vertexs[i].controlFlag == 2){
 	printf("U\n");
       }
+      auxPointer = vertexs[i].conections;
+      auxPointer2 = NULL;
+      while(auxPointer != NULL){
+	auxPointer2 = auxPointer->next;
+	free(auxPointer);
+	auxPointer = auxPointer2;
+      }
     }
-
-  for(i = 0; i <nbVertex; i++){
-    node* auxPointer = vertexs[i].conections;
-    node* auxPointer2 = NULL;
-    while(auxPointer != NULL){
-      auxPointer2 = auxPointer->next;
-      free(auxPointer);
-      auxPointer = auxPointer2;
-    }
-  }
-  free(queueA);
-  free(vertexs);
-  
-
+    free(vertexs);
   }
   return 0;
 }
