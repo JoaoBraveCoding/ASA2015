@@ -146,7 +146,17 @@ int main(){
 	printf("U\n");
       }
     }
-    
+
+  for(i = 0; i <nbVertex; i++){
+    node* auxPointer = vertexs[i].conections;
+    node* auxPointer2 = NULL;
+    while(auxPointer != NULL){
+      auxPointer2 = auxPointer->next;
+      free(auxPointer);
+      auxPointer = auxPointer2;
+    }
+    free(vertexs[i]);
+  }
 
   }
   return 0;
