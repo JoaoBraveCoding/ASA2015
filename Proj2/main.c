@@ -41,11 +41,13 @@ void identifyNegCycle(vertex* vertexs, int *queueA, int* headOfA, int* tailOfA, 
   node* auxPointer;
   while(!qempty(headOfA, tailOfA)){
     vertexs[queueA[*(headOfA)] - 1].controlFlag = 1;
-    auxPointer = vertexs[queueA[*(headOfA)] - 1].conections;
-    while(auxPointer != NULL){
-      if (vertexs[(auxPointer->vertexNb) - 1].controlFlag == 0)
-	enqueue(queueA, vertexs[(auxPointer->vertexNb) - 1].id, tailOfA, nbVertex);
-      auxPointer= auxPointer->next;
+    if(vertexs[queueA[*(headOfA)] - 1].conections!=NULL){
+      auxPointer = vertexs[queueA[*(headOfA)] - 1].conections;
+      while(auxPointer != NULL){
+	if (vertexs[(auxPointer->vertexNb) - 1].controlFlag == 0)
+	  enqueue(queueA, vertexs[(auxPointer->vertexNb) - 1].id, tailOfA, nbVertex);
+	auxPointer= auxPointer->next;
+      }
     }
     nextQueue(headOfA, nbVertex);
   }
@@ -67,14 +69,13 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
   int changeFlag, headOfB, tailOfB, *queueB, i;
   node* auxPointer;
   changeFlag = headOfB = tailOfB = 0;
-  queueB = (int*) calloc(nbVertex, sizeof(int));
+  queueB = (int*) malloc(nbVertex * sizeof(int));
   for (i = 0; i < nbVertex; i++){
     while (!qempty(headOfA, tailOfA)){
       if(vertexs[queueA[*(headOfA)] - 1].vertexWeight < INT_MAX/2){
 	auxPointer = vertexs[queueA[*(headOfA)] - 1].conections;
 	while(auxPointer != NULL){
-	  relax(&(vertexs[queueA[*(headOfA)] - 1]), &(vertexs[(auxPointer->vertexNb) - 1]),
-		auxPointer->cost, &(changeFlag), queueB, &(tailOfB), nbVertex); 
+	  relax(&(vertexs[queueA[*(headOfA)] - 1]), &(vertexs[(auxPointer->vertexNb) - 1]), auxPointer->cost, &(changeFlag), queueB, &(tailOfB), nbVertex); 
 	  auxPointer = auxPointer->next;
 	}
       }
@@ -82,7 +83,7 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
     }
     free (queueA);
     queueA = queueB;
-    queueB = (int*) calloc(nbVertex, sizeof(int));
+    queueB = (int*) malloc(nbVertex * sizeof(int));
     *(headOfA)= 0;
     *(tailOfA) = tailOfB;
     tailOfB = headOfB = 0;
@@ -109,9 +110,9 @@ int main(){
   if(scanf("%d %d %d", &nbVertex, &nbEdges, &source) == 3){
 
     vertexs = (vertex*) malloc(sizeof(vertex)*nbVertex);
-    queueA = (int*) calloc(nbVertex, sizeof(int));
+    queueA = (int*) malloc(nbVertex* sizeof(int));
 
-    /*Inicializar o vector de vertices e colocamos cada vertice numa queue*/
+    /*inicializar o vector de vertices e colocamos cada vertice numa queue*/
     for(i = 0; i < nbVertex; i++){
       initVertex( &(vertexs[i]) );
       vertexs[i].id = i + 1;
@@ -149,7 +150,6 @@ int main(){
 	printf("U\n");
       }
       auxPointer = vertexs[i].conections;
-      auxPointer2 = NULL;
       while(auxPointer != NULL){
 	auxPointer2 = auxPointer->next;
 	free(auxPointer);
