@@ -37,6 +37,20 @@ void nextQueue(int* head, int N){
     *(head)=0;
 }
 
+void identifyNegCycle(vertex* vertexs, int *queueA, int* headOfA, int* tailOfA, int nbVertex){
+  node* auxPointer;
+  while(!qempty(headOfA, tailOfA)){
+    vertexs[queueA[*(headOfA)]-1].controlFlag = 1;
+    auxPointer = vertexs[queueA[*(headOfA)]-1].conections;
+    while(auxPointer != NULL){
+      if (vertexs[(auxPointer->vertexNb)-1].controlFlag == 0)
+	enqueue(queueA, vertexs[(auxPointer->vertexNb)-1].id, tailOfA, nbVertex);
+      auxPointer= auxPointer->next;
+    }
+    nextQueue(headOfA, nbVertex);
+  }
+}
+
 void relax(vertex* u, vertex* v ,int  w, int* changeFlag, int* queueB, int* tailOfB, int nbVertex){
   if(v -> vertexWeight > u -> vertexWeight + w){
     v -> vertexWeight = u -> vertexWeight + w;
@@ -53,25 +67,17 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
   node* auxPointer;
   changeFlag = headOfB = tailOfB = 0;
   queueB = (int*) calloc(nbVertex, sizeof(int));
-  printf("antes do for\n");
   for (i = 0; i<nbVertex; i++){
     while (!qempty(headOfA, tailOfA)){
       auxPointer = vertexs[queueA[*(headOfA)]-1].conections;
-      printf("depois de dar um valor ao auxpointer\n");
       if(vertexs[queueA[*(headOfA)]-1].vertexWeight < INT_MAX/2){
-	printf(" entrei no if do INT_Max %d\n", vertexs[queueA[*(headOfA)]-1].id);
 	while(auxPointer != NULL){
-	  printf("entrei no while do auxpointer != NULL adj = %d\n", auxPointer->vertexNb);
 	  relax(&(vertexs[queueA[*(headOfA)]-1]), &(vertexs[(auxPointer->vertexNb)-1]), auxPointer->cost, &(changeFlag), queueB, &(tailOfB), nbVertex); 
 	  auxPointer = auxPointer->next;
-	  printf("atribuicao do pointer = next\n");
 	}
-	printf("sai do while\n");
       }
       nextQueue(headOfA, nbVertex);
-      printf("preso no while\n");
     }
-    printf("antes de sair no for\n");
     free (queueA);
     queueA = queueB;
     queueB = (int*) calloc(nbVertex, sizeof(int));
@@ -83,10 +89,8 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, int* headOfA, int*
       break;
     }
   }
-   while(!qempty(headOfA, tailOfA)){
-     vertexs[queueA[*(headOfA)]-1].controlFlag = 1;
-     nextQueue(headOfA, nbVertex);
-    }
+  identifyNegCycle(vertexs, queueA, headOfA, tailOfA, nbVertex);
+   
 }
 
 int main(){
@@ -109,7 +113,6 @@ int main(){
       vertexs[i].id = i+1;
       enqueue( queueA, i+1, &tailOfA, nbVertex);
     }
-    printf("cenas criadas\n");
     vertexs[source-1].vertexWeight = 0;
     vertexs[source-1].controlFlag = 0;
 
@@ -118,7 +121,6 @@ int main(){
       fillNode(connectionToAdd, end, cost);
 
       if(beggining == end){
-	printf("porcaria -> beggining = end\n");
 	return 0;
       }
 
@@ -131,7 +133,6 @@ int main(){
 	vertexs[beggining-1].conections = connectionToAdd;
       }
     }
-    printf("antes do bell\n");
     bellmanFord ( vertexs, nbVertex, queueA, &headOfA, &tailOfA);
    
     for(i = 0; i<nbVertex; i++){
