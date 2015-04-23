@@ -2,11 +2,9 @@
 
 void initVertex( vertex* ver){
   ver->id = 0;
-  ver-> addedToQueue = 1;
   ver->controlFlag = 2;
   ver->conections = NULL;
   ver->vertexWeight = INT_MAX/2;
-  ver->predecessor = -1;
 }
 
 void fillNode( node* n, int vertexNb, int cost){
@@ -30,16 +28,10 @@ void nextQueue(limites* l){
 
 void identifyNegCycle(vertex* vertexs, int *queueA, limites* limOfA, int nbVertex, int* inQueueA){
   node* auxPointer;
-   int i;  
-   for(i = 0; i<nbVertex+1; i++){  
-     printf("%d %d\n", i, queueA[i]);  
-   }
   while(!qempty(limOfA)){
     vertexs[queueA[limOfA -> head] - 1].controlFlag = 1;
     auxPointer = vertexs[queueA[limOfA->head] - 1].conections;
-    printf(" %d %d\n", limOfA->head, queueA[limOfA -> head]); 
     while(auxPointer != NULL){
-      /* printf("%d\n",inQueueA[auxPointer->vertexNb]); */
       if (vertexs[(auxPointer->vertexNb) - 1].controlFlag == 0 && inQueueA[auxPointer->vertexNb -1] == 0){
 	enqueue(queueA, auxPointer->vertexNb, limOfA);
       }
@@ -52,7 +44,6 @@ void identifyNegCycle(vertex* vertexs, int *queueA, limites* limOfA, int nbVerte
 int relax(vertex* u, vertex* v ,int  w, int changeFlag, int* queueB, limites* limOfB, int* inQueueB, limites* limOfA, int* queueA, int* inQueueA){
   if(v->vertexWeight > u->vertexWeight + w){
     v->vertexWeight = u->vertexWeight + w;
-    v->predecessor = u->id;
     if(inQueueB[v->id - 1] == 0){
 	enqueue(queueB, v->id, limOfB);
 	inQueueB[v->id - 1] = 1;
@@ -104,7 +95,6 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, limites* limOfA){
     auxIntPointer = inQueueA;
     inQueueA = inQueueB;
     inQueueB = auxIntPointer;
-    memset(queueB, 0, sizeof(*queueB)*(nbVertex+1));
     memset(inQueueB, 0, sizeof(*inQueueB)*nbVertex);
     limOfA -> head = 0;
     limOfA -> tail = limOfB -> tail;
@@ -116,7 +106,9 @@ void bellmanFord (vertex* vertexs, int nbVertex, int* queueA, limites* limOfA){
   }
   free(inQueueB);
   free(queueB);
+  free(limOfB);
   identifyNegCycle(vertexs, queueA, limOfA, nbVertex, inQueueA);
+  free(inQueueA);
    
 }
 
@@ -125,7 +117,7 @@ int main(){
   int nbVertex, nbEdges, source, beggining, end, cost, i, *queueA;
   vertex *vertexs;
   limites *limOfA;
-  node *connectionToAdd;
+  node *connectionToAdd, *auxPointer, *auxPointer2;
   nbVertex = nbEdges = source = beggining = end = cost = i = 0;
   vertexs = NULL;
   queueA = NULL;
@@ -176,6 +168,18 @@ int main(){
 	printf("U\n");
       }
     }
+    for(i = 0; i <nbVertex; i++){
+      auxPointer = vertexs[i].conections;
+      auxPointer2 = NULL;
+      while(auxPointer != NULL){
+	auxPointer2 = auxPointer->next;
+	free(auxPointer);
+	auxPointer = auxPointer2;
+      }
+    }
+
+    free(queueA);
+    free(limOfA);
     free(vertexs);
   }
   return 0;

@@ -17,8 +17,6 @@ typedef struct vertex_struct{
   int controlFlag;  /*0 -value/ 1 - I/ 2 - U*/
   node* conections;
   int vertexWeight;
-  int predecessor;
-  int addedToQueue; /*1 not added/ 0 added*/
 }vertex;
 
 typedef struct limites_struct{
