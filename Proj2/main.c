@@ -2,6 +2,7 @@
 
 void initVertex( vertex* ver){
   ver->id = 0;
+  ver-> addedToQueue = 1;
   ver->controlFlag = 2;
   ver->conections = NULL;
   ver->vertexWeight = INT_MAX/2;
@@ -29,17 +30,13 @@ void nextQueue(limites* l){
 
 void identifyNegCycle(vertex* vertexs, int *queueA, limites* limOfA, int nbVertex){
   node* auxPointer;
-  /* int i; */
-  /* for(i=0; i<nbVertex*2;i++){ */
-  /*   printf("%d %d\n", i, queueA[i]); */
-  /* } */
+
   while(!qempty(limOfA)){
     vertexs[queueA[limOfA -> head] - 1].controlFlag = 1;
-    printf("%d %d\n", limOfA->head, queueA[limOfA -> head]);
     auxPointer = vertexs[queueA[limOfA->head] - 1].conections;
     while(auxPointer != NULL){
-      if (vertexs[(auxPointer->vertexNb) - 1].controlFlag == 0){
-
+      if (vertexs[(auxPointer->vertexNb) - 1].controlFlag == 0 && vertexs[(auxPointer->vertexNb) - 1].addedToQueue){
+	vertexs[(auxPointer->vertexNb) - 1].addedToQueue = 0;
 	enqueue(queueA, auxPointer->vertexNb, limOfA);
       }
       auxPointer= auxPointer->next;
@@ -52,7 +49,6 @@ int relax(vertex* u, vertex* v ,int  w, int changeFlag, int* queueB, limites* li
   if(v->vertexWeight > u->vertexWeight + w){
     v->vertexWeight = u->vertexWeight + w;
     v->predecessor = u->id;
-    printf("estou no relax\n");
     enqueue(queueB, v->id, limOfB);
     v->controlFlag = 0;
     return 1;
